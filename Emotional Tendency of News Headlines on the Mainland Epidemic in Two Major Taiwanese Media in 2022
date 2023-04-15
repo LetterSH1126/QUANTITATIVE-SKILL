@@ -6,7 +6,7 @@ words_list_jieba = jieba.lcut(text)
 
 words_list = []
 for i in words_list_jieba:
-    if i in ["x","y"] or i.isnumeric():     #去掉无意义字词
+    if i in ["x","y"] or i.isnumeric():     #去掉无意义字词，x、y是举例，原代码过长
         pass
     else:
         words_list.append(i)
