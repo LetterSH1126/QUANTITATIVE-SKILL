@@ -1,0 +1,92 @@
+import matplotlib.pyplot as plt
+import wordcloud
+import jieba
+text = open("TVBS爬虫标题位置\\","r",encoding='ANSI').read()
+words_list_jieba = jieba.lcut(text)
+
+words_list = []
+for i in words_list_jieba:
+    if i in ["x","y"] or i.isnumeric():     #去掉无意义字词
+        pass
+    else:
+        words_list.append(i)
+
+dict = {}  # 记录唯一值出现的次数
+for key in words_list:
+    dict[key] = dict.get(key, 0) + 1
+    
+wordcloud = wordcloud.WordCloud(font_path='typeface.ttf', \
+								background_color='White').fit_words(dict)
+
+plt.figure(figsize=(12,14))
+plt.imshow(wordcloud)
+plt.axis("off")
+plt.show()
+
+
+
+#情感分析
+def dict_load(path):
+    dict=[]
+    with open(path, encoding='utf-8-sig') as f:
+        for line in f:
+            if line.strip() !='':
+                dict.append(line.strip())
+    return(dict)
+
+#开始加载情感词典列表
+neg_dict = [] #消极情感词典
+pos_dict = [] #积极情感词典
+no_dict = [] #否定词词典
+dict_file_path='词典位置\\'
+pos_dict=dict_load(dict_file_path+'台湾大学NTUSD简体中文情感词典/ntusd-positive.txt')
+print("==pos_dict loaded successfully==")
+neg_dict=dict_load(dict_file_path+'台湾大学NTUSD简体中文情感词典/ntusd-negative.txt')
+print("==neg_dict loaded successfully==")
+no_dict=dict_load(dict_file_path+'否定词典\\否定.txt')
+print("==no_dict loaded successfully==")
+
+
+def words_count(wordslist, negdict, posdict, nodict):
+    pos_list = []
+    neg_list = []
+    for sent in wordslist:
+        pos=0
+        neg=0
+        for i in range(len(sent)):
+            if sent[i] in negdict:
+                if i==1 and sent[i-1] in nodict:
+                    pos=pos+1        #否定-消极
+                elif i==1 and sent[i-1] not in nodict:
+                    neg=neg+1        #其他-消极
+                elif i>1 and sent[i-1] in nodict:
+                    if sent[i-2] in nodict:
+                        neg=neg+1   #否定-否定-消极
+                    else: 
+                        pos=pos+1      #其他-否定-消极
+                elif i>1 and sent[i-1] not in nodict:
+                    if sent[i-2] in nodict:
+                        pos =pos+1  #否定-其他-消极
+                    else:
+                        neg =neg+1  #其他-其他-消极
+                    
+            elif sent[i] in posdict:
+                if i==1 and sent[i-1] in nodict:
+                    neg=neg+1        #否定-积极
+                elif i==1 and sent[i-1] not in nodict:
+                    pos=pos+1        #其他-积极
+                elif i>1 and sent[i-1] in nodict:
+                    if sent[i-2] in nodict:
+                        pos=pos+1   #否定-否定-积极
+                    else: 
+                        neg=neg+1      #其他-否定-积极
+                elif i>1 and sent[i-1] not in nodict:
+                    if sent[i-2] in nodict:
+                        neg =neg+1  #否定-其他-积极
+                    else:
+                        pos =pos+1  #其他-其他-积极
+        pos_list.append(pos)
+        neg_list.append(neg)
+    return pos_list, neg_list
+
+words_count(words_list, negdict, posdict, nodict)
